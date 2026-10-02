@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  passwordHash  String?
+  facebookId    String?   @unique
+  role          String    @default("READER") // READER, EDITOR, ADMIN
+  status        String    @default("ACTIVE") // ACTIVE, MUTED, BANNED
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  articles      Article[]
+  comments      Comment[]
+  media         Media[]
+}
+
+model Article {
+  id               String            @id @default(uuid())
+  title            String
+  slug             String            @unique
+  excerpt          String
+  body             String
+  featuredImageUrl String?
+  featuredImageAlt String?
+  status           String            @default("DRAFT") // DRAFT, PUBLISHED, SCHEDULED
+  publishedAt      DateTime?
+  metaTitle        String?
+  metaDescription  String?
+  authorId         String
+  author           User              @relation(fields: [authorId], references: [id])
+  categories       ArticleCategory[]
+  tags             ArticleTag[]
+  comments         Comment[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Category {
+  id          String            @id @default(uuid())
+  name        String            @unique
+  slug        String            @unique
+  description String?
+  articles    ArticleCategory[]
+}
+
+model Tag {
+  id       String       @id @default(uuid())
+  name     String       @unique
+  slug     String       @unique
+  articles ArticleTag[]
+}
+
+model ArticleCategory {
+  articleId  String
+  categoryId String
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, categoryId])
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  articleId String
+  userId    String
+  body      String
+  status    String   @default("APPROVED") // PENDING, APPROVED, REJECTED, SPAM
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Media {
+  id         String   @id @default(uuid())
+  uploaderId String
+  url        String
+  altText    String
+  filename   String
+  uploader   User     @relation(fields: [uploaderId], references: [id])
+  createdAt  DateTime @default(now())
+}
