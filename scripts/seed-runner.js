@@ -4,6 +4,14 @@ const bcrypt = require('bcryptjs')
 const db = new PrismaClient()
 
 async function seed() {
+  const force = process.argv.includes('--force')
+  const existingArticles = await db.article.count()
+
+  if (existingArticles > 0 && !force) {
+    console.log(`Database already has ${existingArticles} articles. Skipping seed (use --force to overwrite).`)
+    return
+  }
+
   console.log('Seeding Disability Digest database...')
 
   // Clean existing data
