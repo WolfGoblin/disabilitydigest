@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { seedDatabase } from '@/lib/seed'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     await seedDatabase()
